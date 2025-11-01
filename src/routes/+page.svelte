@@ -1,5 +1,8 @@
 <script lang="ts">
-  import Welcome from "$lib/components/Welcome.svelte";
+  import DemoComponent from "$lib/components/DemoComponent.svelte";
+
+  /** @type {{briefs: any[]}} */
+  let { briefs } = $props();
 </script>
 
-<Welcome />
+<DemoComponent {briefs} />
