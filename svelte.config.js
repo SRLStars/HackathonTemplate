@@ -1,30 +1,30 @@
-import adapter from '@sveltejs/adapter-static';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapter from "@sveltejs/adapter-static";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
 const config = {
-	preprocess: vitePreprocess(),
-	kit: {
-		adapter: adapter({
-			// Static adapter with fallback for SPA behavior
-			pages: 'build',
-			assets: 'build',
-			fallback: 'index.html' // serve index.html for unknown paths
-		}),
+  preprocess: vitePreprocess(),
+  kit: {
+    adapter: adapter({
+      // Static adapter with fallback for SPA behavior
+      pages: "build",
+      assets: "build",
+      fallback: "index.html", // serve index.html for unknown paths
+    }),
 
-		paths: {
-			base: '/stars' // base path of your app
-		},
+    paths: {
+      base: "", // base path of your app
+    },
 
-		alias: {
-			$lib: 'src/lib',
-			$components: 'src/lib/components'
-		}
+    alias: {
+      $lib: "src/lib",
+      $components: "src/lib/components",
+    },
 
-		// additional configurations...
-	},
-	vitePlugin: {
-		inspector: true
-	}
+    // additional configurations...
+  },
+  vitePlugin: {
+    inspector: true,
+  },
 };
 
 export default config;
