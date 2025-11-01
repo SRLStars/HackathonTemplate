@@ -1,6 +1,9 @@
 import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
+// Use an empty string for dev, /HackathonTemplate for production
+const dev = process.env.NODE_ENV !== 'production';
+
 const config = {
   preprocess: vitePreprocess(),
   kit: {
@@ -12,7 +15,7 @@ const config = {
     }),
 
     paths: {
-      base: process.env.NODE_ENV === 'production' ? '/HackathonTemplate' : '', // base path of your app
+      base: dev ? '' : '/HackathonTemplate', // base path of your app
     },
 
     alias: {
