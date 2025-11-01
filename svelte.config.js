@@ -12,7 +12,7 @@ const config = {
     }),
 
     paths: {
-      base: "", // base path of your app
+      base: process.env.NODE_ENV === 'production' ? '/HackathonTemplate' : '', // base path of your app
     },
 
     alias: {
