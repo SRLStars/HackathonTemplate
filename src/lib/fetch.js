@@ -47,7 +47,7 @@ function handle401Redirect() {
     "&auth_provider=google_microsoft";
 
   console.log("401 Unauthorized - Redirecting to sign in:", authURL);
-  alert("401 Unauthorized - Redirecting to sign in:" + authURL);
+  //alert("401 Unauthorized - Redirecting to sign in:" + authURL);
 
   if (typeof window === "undefined") {
     console.log("Server side redirect");
@@ -88,7 +88,7 @@ async function performFetch(api, options = {}) {
   }
 
   try {
-    alert("Fetching: " + url);
+    //alert("Fetching: " + url);
     const response = await fetch(url, fetchOptions);
     console.log("Response:", response);
 
@@ -123,7 +123,7 @@ async function performFetch(api, options = {}) {
     // Handle error responses
     if (!response.ok) {
       if (response.status === 401) {
-        alert("Unauthorized - Redirecting to sign in");
+        //alert("Unauthorized - Redirecting to sign in");
         handle401Redirect();
       }
       if (response.status === 404) {

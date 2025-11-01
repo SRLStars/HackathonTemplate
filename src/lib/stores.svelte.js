@@ -16,7 +16,7 @@ export function APIhost() {
   //deliberately don't add trailing slash, force consumers to prefix path with / so they are easy to search for
   //return "http://localhost:8062";
   return `https://compucore.itcarlow.ie/STARSAPI`;
-  return window.origin + url;
+  //return window.origin + url;
 }
 
 export function WebAppRoot() {
