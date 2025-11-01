@@ -1,0 +1,44 @@
+:root {
+	font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+	color: -var(--slate-800);
+}
+
+:where([style*='display:flex'], [style*='display: flex']) > * {
+	/* all elements to shrink as far as necessary in flex boxes*/
+	/* https://www.youtube.com/watch?v=cH8VbLM1958&ab_channel=Theo-t3%E2%80%A4gg */
+	min-width: 0;
+}
+
+@media not (pointer: fine) {
+	/*hide scroll bar if mouse not present*/
+	body::-webkit-scrollbar {
+		display: none;
+		-ms-overflow-style: none;
+		/* IE and Edge */
+		scrollbar-width: none;
+		/* Firefox */
+	}
+}
+
+body {
+	margin-top: 0px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: 'Montserrat', sans-serif;
+}
+
+.cm-spell-error {
+	/* override the default style for spelling errors */
+	background-color: initial !important;
+	text-decoration: red wavy underline;
+}
+
+.flex {
+	display: flex;
+}

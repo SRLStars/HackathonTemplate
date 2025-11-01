@@ -1,0 +1,110 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch: #manually triggered
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-dev:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Checking out main repo
+        uses: actions/checkout@v3
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          web_port: ${{ vars.WEB_PORT }}
+          mysql_root_password: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          mysql_database: ${{ vars.MYSQL_DATABASE }}
+          jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          access_packages_pat: ${{ secrets.ACCESS_PACKAGES_PAT }}
+      # Optionally: unshallow to get tags
+      - name: Unshallow
+        run: git fetch --prune --unshallow
+      - name: Install Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "web"
+      - name: build client
+        run: |
+          cd web
+          npm ci
+          npm run build
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Make tar file
+        run: |
+          echo REVIEW_SYSTEM_VERSION=$(git describe --abbrev=0) >> .env
+          echo REVIEW_SYSTEM_GITHUB_TAG=$(git describe --tags) >> .env
+          echo REVIEW_SYSTEM_BUILD_NUMBER=$(git rev-list HEAD --count) >> .env
+          touch files.tar
+          tar --exclude="*.tar" --exclude="mail" --exclude="**\venv" --exclude-vcs -czvf files.tar .
+      - name: delete old tar file from target
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{vars.HOST_NAME}}
+          username: ${{ vars.HOST_USER }}
+          password: ${{ secrets.HOST_USER_PASSWORD }}
+          script: |
+            # not sure why need to change ownership, but un-tar will change owner to 1001
+            # and then we cannot write to that folder
+            sudo chown ${{ vars.HOST_USER }} ${{vars.HOST_FOLDER}}
+            cd /home/${{ vars.HOST_USER }}/${{vars.HOST_FOLDER}}
+            sudo rm files.tar || true
+      - name: copy file via ssh password
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{vars.HOST_NAME}}
+          username: ${{ vars.HOST_USER }}
+          password: ${{ secrets.HOST_USER_PASSWORD }}
+          source: "files.tar"
+          target: "/home/${{ vars.HOST_USER }}/${{vars.HOST_FOLDER}}"
+      - name: unpack tar file
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{vars.HOST_NAME}}
+          username: ${{ vars.HOST_USER }}
+          password: ${{ secrets.HOST_USER_PASSWORD }}
+          script: |
+            sudo tar -xvf /home/${{ vars.HOST_USER }}/${{vars.HOST_FOLDER}}/files.tar  --directory /home/${{ vars.HOST_USER }}/${{vars.HOST_FOLDER}}
+            cd /home/${{ vars.HOST_USER }}/${{vars.HOST_FOLDER}}
+            mkdir -p tokens
+            sudo chown $USER:$USER tokens
+            ls -ld tokens
+            sudo chown $USER:$USER tokens/.env
+            ls -ld tokens/.env
+            echo "MYSQL_ROOT_PASSWORD=${{secrets.MYSQL_ROOT_PASSWORD}}" > tokens/.env
+            echo "MYSQL_DATABASE=${{vars.MYSQL_DATABASE}}" >> tokens/.env
+            echo "JWT_SECRET_KEY=${{secrets.JWT_SECRET_KEY}}" >> tokens/.env
+            echo "AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}" >> tokens/.env
+            echo "AWS_ACCESS_KEY_ID =${{secrets.AWS_ACCESS_KEY_ID }}" >> tokens/.env
+            cat tokens/.env
+          # sudo cp ./static/dev_config.js ./static/config.js
+      - name: start service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{vars.HOST_NAME}}
+          username: ${{ vars.HOST_USER }}
+          password: ${{ secrets.HOST_USER_PASSWORD }}
+          script: |
+            cd /home/${{ vars.HOST_USER }}/${{vars.HOST_FOLDER}}
+            cat .env
+            docker compose version
+            sudo docker compose down
+            sudo CONFIGURATION=PROD docker compose up -d --build
+            cd web
+          # npm run preview &

@@ -1,0 +1,87 @@
+# GitHub Copilot coding agent environment setup
+# This file customizes the development environment for the GitHub Copilot coding agent
+# Based on the existing .github/actions/setup/action.yml
+#
+# IMPORTANT: This project uses a private npm package '@srlstars/design-system' 
+# which requires a valid GitHub Packages PAT token with read:packages permission.
+
+name: 'Copilot Environment Setup'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    environment: copilot
+    env:
+      WEB_PORT: ${{ inputs.web_port || vars.WEB_PORT }}
+      MYSQL_DATABASE: ${{ vars.MYSQL_DATABASE }}
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      ACCESS_PACKAGES_PAT: ${{ secrets.ACCESS_PACKAGES_PAT }}
+
+    steps:
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          web_port: ${{ vars.WEB_PORT }}
+          mysql_root_password: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          mysql_database: ${{ vars.MYSQL_DATABASE }}
+          jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          access_packages_pat: ${{ secrets.ACCESS_PACKAGES_PAT }}
+      - name: Build services using Docker Compose
+        env:
+          COMPOSE_DOCKER_CLI_BUILD: 1
+          DOCKER_BUILDKIT: 1
+        run: docker compose build --progress=plain
+
+      - name: Start the server under test
+        run: |
+          docker compose up -d
+          docker ps
+
+      - name: Start the app
+        working-directory: ./web
+        run: |
+          npm run build
+        env:
+          PORT: ${{vars.WEB_PORT}}
+
+      - name: Start web app
+        working-directory: ./web
+        run: |
+          PORT=${{ vars.WEB_PORT }} npm run preview &       
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for backend server to be ready..."
+          sleep 10
+          echo "Waiting for frontend server to be ready..."
+          sleep 5
+          echo "Environment setup complete. Services should be available at:"
+          echo "- Backend: http://localhost:5000"
+          echo "- Frontend: http://localhost:${WEB_PORT:-4173}"
+
+      - name: Run tests with code coverage
+        working-directory: ./web
+        env:
+          PORT: ${{ vars.WEB_PORT }}
+        run: |
+          echo "Waiting for the server to be ready…"
+          npx wait-on -t=60s http://localhost:$PORT/stars/api/hello
+          npx playwright test
+
+      - name: Show server logs on test failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop the apps
+        if: always()
+        run: |
+          docker compose down
+          kill $(lsof -t -i:${{ vars.WEB_PORT }})
