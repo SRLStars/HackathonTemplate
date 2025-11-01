@@ -1,18 +1,15 @@
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import { APIhost, authHost } from '$lib/stores.svelte.js';
 import fetchJSON from '$lib/fetch.js';
 
 export let user = $state({});
 
 export const redirectToAuth = () => {
-	let path = '/';
-	const host = window.location.hostname.toLowerCase();
-	const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
-
-	if (!isLocal) {
-		path = '/stars/';
-	}
+	// Use resolve to get the correct path with base path prefix
+	// This will be '/' for local dev and '/HackathonTemplate/' for GitHub Pages
+	const path = resolve('/');
 
 	let authURL =
 		'https://compucore.itcarlow.ie/auth/sign_in?redirect=' + window.location.origin + path;
