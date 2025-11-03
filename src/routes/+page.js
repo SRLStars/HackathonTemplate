@@ -1,10 +1,13 @@
 import fetchJson from "$lib/fetch.js";
+import { postJson } from "$lib/fetch.js";
 
 export const ssr = false;
 
 export async function load({ url }) {
-  const briefs = await fetchJson("/briefs/all");
+  const briefs = await fetchJson("/stars/briefs/all");
+  const userInfo = await postJson("/skills/get-user-information");
 
   console.log("Loaded briefs:", briefs);
-  return { briefs };
+  console.log("Loaded userInfo:", userInfo);
+  return { briefs, userInfo };
 }

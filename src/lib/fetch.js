@@ -1,10 +1,15 @@
 import { error } from "@sveltejs/kit";
-import { basePath, basePathAPI } from "$lib/stores.svelte.js";
+import {
+  basePath,
+  basePathAPI,
+  starsAPIhost,
+  skillsAPIhost,
+} from "$lib/stores.svelte.js";
 import { user } from "$lib/user.svelte.js";
 import { redirect } from "@sveltejs/kit";
-import { APIhost, WebAppRoot, APIhostStatic } from "$lib/stores.svelte.js";
+import { WebAppRoot, APIhostStatic } from "$lib/stores.svelte.js";
 
-export { APIhost, WebAppRoot, APIhostStatic };
+export { starsAPIhost as APIhost, WebAppRoot, APIhostStatic };
 
 export function UUID() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -37,15 +42,16 @@ function normalizeRedirectUrl(redirectUrl) {
 }
 
 // Helper function to handle 401 unauthorized responses
-function handle401Redirect() {
+function handle401Redirect(host) {
   const authURL =
     "https://compucore.itcarlow.ie/auth/sign_in?redirect=" +
-    APIhost() +
+    host +
     "/auth_callback" +
     "&origin_url=" +
     window.location.href +
     "&auth_provider=google_microsoft";
 
+  alert("401 Unauthorized - Redirecting to sign in:" + authURL);
   console.log("401 Unauthorized - Redirecting to sign in:", authURL);
   //alert("401 Unauthorized - Redirecting to sign in:" + authURL);
 
@@ -69,13 +75,22 @@ async function performFetch(api, options = {}) {
     showAlert = false,
   } = options;
 
-  const url = APIhost() + api;
-  console.log(`${method}:`, url);
+  var host;
+  if (api.startsWith("/stars")) {
+    api = api.replace("/stars", "");
+    host = starsAPIhost();
+  } else if (api.startsWith("/skills")) {
+    api = api.replace("/skills", "");
+    host = skillsAPIhost();
+  }
+
+  const url = host + api;
+  console.log(`Fetching ${method}:`, url);
 
   const finalHeaders = addAuthHeaders(headers);
   const fetchOptions = {
     method,
-    credentials: "include",
+    //credentials: "include",
     headers: finalHeaders,
   };
 
@@ -124,7 +139,7 @@ async function performFetch(api, options = {}) {
     if (!response.ok) {
       if (response.status === 401) {
         //alert("Unauthorized - Redirecting to sign in");
-        handle401Redirect();
+        handle401Redirect(host);
       }
       if (response.status === 404) {
         if (throw404) {
@@ -179,6 +194,7 @@ export async function deleteJson(api, data = {}) {
 }
 
 async function sendJson(api, data = {}, method = "POST") {
+  console.log(`Sending JSON ${method} to ${api}:`, data);
   return performFetch(api, {
     method,
     headers: { "Content-Type": "application/json" },

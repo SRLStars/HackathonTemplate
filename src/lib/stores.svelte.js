@@ -4,7 +4,7 @@ export const appState = $state({ currentBrief: null, briefs: [] });
 
 export const authHost = "https://compucore.itcarlow.ie/auth";
 
-export function APIhost() {
+export function starsAPIhost() {
   let url = `/${basePath}/api`; // for local development
 
   // send api requests to vite server
@@ -19,10 +19,15 @@ export function APIhost() {
   //return window.origin + url;
 }
 
+export function skillsAPIhost() {
+  //return "https://compucore.itcarlow.ie/SkillsAPI/";
+  return "http://localhost:8044";
+}
+
 export function WebAppRoot() {
   return window.origin + `/${basePath}/`;
 }
 
 export function APIhostStatic() {
-  return APIhost(); // +"static/";
+  return starsAPIhost(); // +"static/";
 }

@@ -3,10 +3,14 @@
 
   /** @type {{briefs: any[]}} */
   let { data } = $props();
-  const { briefs } = data;
+  const { briefs, userInfo } = data;
   console.log("Page data:", data);
 </script>
 
+<h1>User</h1>
+<pre>{JSON.stringify(userInfo, null, 2)}</pre>
+
+<hr />
 <DemoComponent {briefs} />
 <hr />
 <footer>
