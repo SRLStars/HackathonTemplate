@@ -51,7 +51,6 @@ function handle401Redirect(host) {
     window.location.href +
     "&auth_provider=google_microsoft";
 
-  alert("401 Unauthorized - Redirecting to sign in:" + authURL);
   console.log("401 Unauthorized - Redirecting to sign in:", authURL);
   //alert("401 Unauthorized - Redirecting to sign in:" + authURL);
 

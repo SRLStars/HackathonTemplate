@@ -15,13 +15,13 @@ export function starsAPIhost() {
 
   //deliberately don't add trailing slash, force consumers to prefix path with / so they are easy to search for
   //return "http://localhost:8062";
-  return `https://compucore.itcarlow.ie/STARSAPI`;
+  return `https://compucore.itcarlow.ie/HackathonStarsAPI`;
   //return window.origin + url;
 }
 
 export function skillsAPIhost() {
-  //return "https://compucore.itcarlow.ie/SkillsAPI/";
-  return "http://localhost:8044";
+  return "https://compucore.itcarlow.ie/HackathonSkillsAPI";
+  //return "http://localhost:8044";
 }
 
 export function WebAppRoot() {
