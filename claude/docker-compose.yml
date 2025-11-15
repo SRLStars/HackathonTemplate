@@ -1,0 +1,12 @@
+services:
+  claude:
+    build:
+      context: .
+      dockerfile: Dockerfile.claude
+    container_name: claude
+    tty: true
+    stdin_open: true
+    volumes:
+      # Mount your local ./claude directory as the container's home
+      - ..:/home/dev/claude
+    command: ["-lc", "claude"]

@@ -1,0 +1,14 @@
+# Dockerfile.claude
+FROM node:20-bullseye
+
+RUN npm i -g @anthropic-ai/claude-code
+
+# Create non-root user for runtime
+RUN useradd -m dev
+USER dev
+WORKDIR /home/dev/claude
+
+# Make your chosen "home" directory (claude/) the working dir
+WORKDIR /home/dev/claude
+
+ENTRYPOINT ["/bin/bash","-l"]
