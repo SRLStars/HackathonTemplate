@@ -1,5 +1,5 @@
-import fetchJson from "$lib/fetch.js";
-import { postJson } from "$lib/fetch.js";
+import fetchJson from "$lib/fetch.svelte.js";
+import { postJson } from "$lib/fetch.svelte.js";
 
 export const ssr = false;
 

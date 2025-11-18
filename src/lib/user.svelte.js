@@ -2,8 +2,8 @@ import { browser } from "$app/environment";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { starsAPIhost, authHost } from "$lib/stores.svelte.js";
-import fetchJSON from "$lib/fetch.js";
-import { postJson } from "$lib/fetch.js";
+import fetchJSON from "$lib/fetch.svelte.js";
+import { postJson } from "$lib/fetch.svelte.js";
 
 export let user = $state({});
 
@@ -29,6 +29,7 @@ function getUserFromLocalStorage() {
 }
 
 export async function ensureUserLoggedIn(url) {
+  console.log("ensureUserLoggedIn called with url:", url);
   if (browser) {
     if (url) {
       //check
@@ -47,7 +48,7 @@ export async function ensureUserLoggedIn(url) {
         user.auth_provider_id = url.searchParams.get("auth_provider_id");
         user.token = token;
 
-        localStorage.setItem("user", JSON.stringify(user));
+        await localStorage.setItem("user", JSON.stringify(user));
 
         console.log("clearing URL of token and user data");
         await goto(window.location.pathname, { replaceState: true });
@@ -59,6 +60,7 @@ export async function ensureUserLoggedIn(url) {
     // console.log('User from context:', user);
 
     if (!user.id) {
+      console.log("No user.id in state, checking localStorage");
       const storedUser = await getUserFromLocalStorage();
       Object.assign(user, storedUser);
       console.log("User from localStorage:", storedUser);
