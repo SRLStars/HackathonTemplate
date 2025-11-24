@@ -1,162 +1,102 @@
-# Artefacts
+# SvelteKit Starter Template
 
-## Prerequisites
+A minimal SvelteKit starter template for building modern web applications.
 
-Download the tokens folder (project secrets) from https://drive.google.com/drive/folders/1SPkW17YsGNG68zT5oca3Rwfvs93kOL6-?usp=drive_link and place it in the root of the project.
+## Quick Start
 
-tokens/.env should contain. (AWS settings for bedrock/AI)
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-```
-MYSQL_ROOT_PASSWORD=******
-MYSQL_DATABASE=WritingAnalytics
-JWT_SECRET_KEY=******
-# next two enable hot reloading
-GUNICORN_CMD_ARGS="--reload"
-CONFIGURATION=DEV
-AWS_ACCESS_KEY_ID = XXXXXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY = XXXXXXXXXXXXXXXXXXX
+2. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-```
+Your app will open automatically in the browser at `http://localhost:5173`
 
-## Install private packages
+## Available Commands
 
-create a .npmrc file in the root of the WEB project with the following content (get your GitHub PAT from text with permissions for repo, read:packages and write:packages) (there is a copy in the google tokesn folder):
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm test` - Run all tests
+- `npm run lint` - Check code quality
+- `npm run format` - Format code with Prettier
 
-```
-@srlstars:registry=https://npm.pkg.github.com/
-//npm.pkg.github.com/:_authToken=GITHUB_PAT_TOKEN
-```
+## What's Included
 
-Then run:
+- **SvelteKit** - Modern web framework
+- **Vite** - Fast build tool
+- **Playwright** - End-to-end testing
+- **Vitest** - Unit testing
+- **ESLint & Prettier** - Code quality tools
+- **FontAwesome** - Icon library
+- **Chart.js** - Data visualization
+- **Marked** - Markdown parser
+- **Authentication System** - Built-in support for authenticated API access
 
-```
-cd web
-npm install
-```
-
-## Launch the service
-
-For local development (with hot reloading)
-
-`docker compose up`
-
-`docker compose down && docker compose up`
-
-in separate shell
-
-`cd web`
-`npm run dev`
-
-For production
-
-`CONFIGURATION=PROD docker compose up`
-
-## Run the service in prod
-
-This action is triggered by a push to the main branch. The service is deployed to compucore.itcarlow.ie.
-
-https://github.com/itcOnlineGaming/artefacts/actions/workflows/deploy.yml
-
-## login with test user
-
-On localhost you can login with the test user with arbitrary name & role
-(TODO: at the moment this will not overwrite the existing user, so you may need to delete the user cookie first or use incognito mode in the browser):
-PORT is whatever flask app is on
+## Project Structure
 
 ```
+src/
+├── lib/          # Reusable components and utilities
+├── routes/       # Pages and API endpoints
+└── app.html      # HTML template
 
-http://localhost:8062/__dev_login?email=test@example.com&display_name=Dr%20Test%20User&role=admin
-
+static/           # Static assets (images, fonts, etc.)
 ```
 
-# Testing
+## Authentication & API Access
 
-## Run python tests
+This template includes a pre-configured authentication system that allows you to make authenticated API calls to the hackathon backend.
 
-Run with alternate DB (e.g. clean for testing)
+### How It Works
 
-```
-`MYSQL_DATABASE=test_db docker compose up`
+1. **Automatic Login Flow**: Users are redirected to the authentication service when needed
+2. **Token Management**: Authentication tokens are automatically stored and included in API requests
+3. **User Data**: Access user information via the `user` object in your components
 
-```
+### Making API Calls
 
-From root, run: `pytest`
+```javascript
+import fetchJSON, { postJson, putJson, deleteJson } from '$lib/fetch.svelte.js';
 
-or `ptw` (for hot retesting, requires `pip install pytest-watch`)
+// GET request
+const data = await fetchJSON('/stars/endpoint');
 
-## Run playwright test
-
-### To run all tests
-
-```cd web
-npx playwright test #all tests
-```
-
-### To run a specific test
-
-```
-npx playwright test tests/devLogin.test.js --headed #to run a specific test with browser visible
+// POST request
+const result = await postJson('/stars/endpoint', { key: 'value' });
 ```
 
-## Troubleshooting playwright tests
+The fetch helpers automatically:
+- Add authentication headers
+- Handle 401 unauthorized responses
+- Redirect to login when needed
 
-### Error report
+### User Information
 
-An error report is generated in the `web/tests/reports` folder. It contains error-context.md and screenshots where
-the error(s) occurred.
+```javascript
+import { user } from '$lib/user.svelte.js';
 
-### To slow down a test
-
-```
-PWDEBUG=1 SLOWMO=1000 npx playwright test tests/e2e.test.js
-```
-
-This turns slow motion and headed on (see the playwright.config.js) 1000ms is 1 second delay per step.
-
-### To record a test
-
-```
-npx playwright codegen http://localhost:4173/
+// Access user data in your components
+console.log(user.email, user.username, user.role);
 ```
 
-### Step through a test
+## Learn More
 
-If you want to step through a test line by line, you can do it in the playwright inspector, like this:
+- [SvelteKit Documentation](https://kit.svelte.dev/docs)
+- [Svelte Tutorial](https://learn.svelte.dev/)
 
+## Testing
+
+Run integration tests:
+```bash
+npm run test:integration
 ```
 
-PWDEBUG=1 npx playwright test tests/createBriefSubmitArtefact.test.js
-
-```
-
-## Writing e2e tests
-
-Issue 1: finding the element id
-
-Finding by ID is not recommended in Playwright, so we should use other selectors where possible. Use getByRole
-or getByLabelText instead of getByTestId.
-
-Some of the elements in the svelte components don't have ids so can't be searched. Also trying to give them ids is not
-necessarily straight forward. For example in the brief description component, the element is created by EasyMDE. And
-EasyMDE hides the <textarea> and inserts the CodeMirror editor in its place,
-which is why the element with id="brief-description" is not visible after initialization.
-For now have resorted to using the hint text in the test to find the element. Need a better solution.
-
-To record the selector of an element, you can use the Playwright Inspector (PWDEBUG=1) and right click on the element
-and select "Copy selector".
-
-OR run codegen to record all selectors in UI flow (URL creates a new user and goes to the home page with user token in query string):
-
-```
-npx playwright codegen http://localhost:5002/stars/api/__dev_login?redirect=http://localhost:5002/stars/
-```
-
-## Possible problems
-
-SSL error on docker build? May be a corporate firewall problem. Try this in PythonDockerfile:
-
-`RUN pip install --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --trusted-host pypi.org -r requirements.txt`
-
-```
-
+Run unit tests:
+```bash
+npm run test:unit
 ```
